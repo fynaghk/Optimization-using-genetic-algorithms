@@ -1,0 +1,71 @@
+import random
+
+# Define classes, rooms, and instructors
+courses = ['Math', 'Science', 'History']
+rooms = ['Room A', 'Room B']
+instructors = ['Prof. A', 'Prof. B', 'Prof. C']
+timeslots = ['Monday 9AM', 'Monday 11AM', 'Tuesday 9AM', 'Tuesday 11AM']
+
+# Create an initial timetable structure (random)
+def create_individual():
+    timetable = []
+    for course in courses:
+        timeslot = random.choice(timeslots)
+        room = random.choice(rooms)
+        instructor = random.choice(instructors)
+        timetable.append((course, timeslot, room, instructor))
+    return timetable
+
+# Fitness function: Check for conflicts (simplified)
+def fitness(individual):
+    conflicts = 0
+    for i in range(len(individual)):
+        for j in range(i + 1, len(individual)):
+            if individual[i][1] == individual[j][1] and individual[i][2] == individual[j][2]:
+                conflicts += 1  # Same timeslot and room
+            if individual[i][1] == individual[j][1] and individual[i][3] == individual[j][3]:
+                conflicts += 1  # Same timeslot and instructor
+    return conflicts
+
+# Selection: Select the top 50% of individuals based on fitness
+def selection(population):
+    sorted_population = sorted(population, key=lambda x: fitness(x))
+    return sorted_population[:len(population)//2]
+
+# Crossover: Combine two parents to create a new individual
+def crossover(parent1, parent2):
+    crossover_point = random.randint(1, len(courses) - 1)
+    child = parent1[:crossover_point] + parent2[crossover_point:]
+    return child
+
+# Mutation: Randomly change a part of an individual
+def mutate(individual):
+    idx = random.randint(0, len(individual) - 1)
+    individual[idx] = (individual[idx][0], random.choice(timeslots), random.choice(rooms), random.choice(instructors))
+    return individual
+
+# Main genetic algorithm
+def genetic_algorithm(population_size=10, generations=50):
+    population = [create_individual() for _ in range(population_size)]
+    
+    for generation in range(generations):
+        population = selection(population)
+        new_population = population[:]
+        
+        # Create new individuals through crossover and mutation
+        while len(new_population) < population_size:
+            parent1, parent2 = random.sample(population, 2)
+            child = crossover(parent1, parent2)
+            new_population.append(mutate(child))
+        
+        population = new_population
+    
+    # Get the best solution
+    best_individual = min(population, key=lambda x: fitness(x))
+    return best_individual
+
+# Run the genetic algorithm and print the result
+best_timetable = genetic_algorithm()
+print("Best Timetable: ")
+for entry in best_timetable:
+    print(f"Course: {entry[0]}, Timeslot: {entry[1]}, Room: {entry[2]}, Instructor: {entry[3]}")
